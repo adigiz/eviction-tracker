@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LegalCase, PaymentStatus, LegalCaseStatus } from "../types";
 import { AuthContext } from "../App";
 import * as Storage from "../services/localStorageService";
-import * as StripeMockService from "../services/StripeMockService"; // Simulated Stripe service
+import * as StripeMockService from "../services/stripeMockService"; // Simulated Stripe service
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const CartPage: React.FC = () => {

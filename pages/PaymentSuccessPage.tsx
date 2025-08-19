@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
-import * as StripeMockService from "../services/StripeMockService";
+import * as StripeMockService from "../services/stripeMockService";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { LegalCase } from "../types";
 

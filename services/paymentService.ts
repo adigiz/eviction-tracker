@@ -1,5 +1,5 @@
 import { LegalCase } from '../types';
-import { api } from './api';
+import { api } from './apiService';
 
 export const paymentService = {
   createCheckoutSession: async (items: LegalCase[]): Promise<{ checkoutUrl: string }> => {

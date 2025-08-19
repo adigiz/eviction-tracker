@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
-import * as StripeMockService from "../services/StripeMockService"; // Simulated Stripe service
+import * as StripeMockService from "../services/stripeMockService"; // Simulated Stripe service
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const PaymentCancelPage: React.FC = () => {

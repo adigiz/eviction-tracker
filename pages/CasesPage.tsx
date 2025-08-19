@@ -12,7 +12,7 @@ import {
 import { AuthContext } from "../App";
 import * as Storage from "../services/localStorageService";
 import Modal from "../components/Modal";
-import FTPRForm from "../components/forms/FTPRForm";
+import FailureToPayRentForm from "../components/forms/FailureToPayRentForm";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { generateEvictionNoticeContent } from "../../services/geminiService"; // Removed warrant/eviction generation
 
@@ -521,7 +521,7 @@ const CasesPage: React.FC = () => {
           title="New Eviction Letter Request"
           size="2xl"
         >
-          <FTPRForm
+          <FailureToPayRentForm
             onSubmitSuccess={handleFTPRSubmitSuccess}
             onCancel={() => setIsFTPRModalOpen(false)}
             properties={properties}
