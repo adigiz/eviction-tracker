@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
-import * as StripeMockService from "../services/stripeMockService"; // Simulated Stripe service
+import * as MockPaymentService from "../services/mockPaymentService"; // Simulated Stripe service
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const PaymentCancelPage: React.FC = () => {
@@ -16,10 +16,10 @@ const PaymentCancelPage: React.FC = () => {
     const reason = searchParams.get("reason");
 
     if (sessionId) {
-      // If payment was cancelled, items might have been reverted to UNPAID by StripeMockService
+      // If payment was cancelled, items might have been reverted to UNPAID by MockPaymentService
       // or by the checkout process if it simulated a pre-redirect failure.
       // We can call processMockPaymentCancel again to ensure idempotency or if not called before.
-      StripeMockService.processMockPaymentCancel(sessionId);
+      MockPaymentService.processMockPaymentCancel(sessionId);
       auth?.updateCartCount?.(); // Update cart badge
     }
 

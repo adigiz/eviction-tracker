@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { LegalCase, PaymentStatus, LegalCaseStatus } from "../types";
 import { AuthContext } from "../App";
 import * as Storage from "../services/localStorageService";
-import * as StripeMockService from "../services/stripeMockService"; // Simulated Stripe service
+import * as MockPaymentService from "../services/mockPaymentService";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 const CartPage: React.FC = () => {
@@ -56,7 +56,7 @@ const CartPage: React.FC = () => {
     try {
       // Simulate backend call to create Stripe Checkout session
       const { sessionId, error: checkoutError } =
-        await StripeMockService.createMockCheckoutSession(
+        await MockPaymentService.createMockCheckoutSession(
           auth.currentUser.id,
           cartItems
         );
@@ -69,7 +69,7 @@ const CartPage: React.FC = () => {
         return;
       }
 
-      // Update cart items in state to reflect PENDING_PAYMENT (though StripeMockService already did in localStorage)
+      // Update cart items in state to reflect PENDING_PAYMENT (though MockPaymentService already did in localStorage)
       setCartItems((prevItems) =>
         prevItems.map((item) => ({
           ...item,
@@ -92,7 +92,7 @@ const CartPage: React.FC = () => {
           // Simulate Stripe redirecting to a cancel URL (or failure)
           // For simplicity, we'll use the same cancel page for now.
           // In a real app, Stripe handles this redirect.
-          StripeMockService.processMockPaymentCancel(sessionId); // Ensure items revert if "Stripe" fails before redirect
+          MockPaymentService.processMockPaymentCancel(sessionId); // Ensure items revert if "Stripe" fails before redirect
           navigate(
             `/payment-cancel?session_id=${sessionId}&reason=mock_payment_failed`
           );

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../App";
-import * as StripeMockService from "../services/stripeMockService";
+import * as MockPaymentService from "../services/mockPaymentService";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { LegalCase } from "../types";
 
@@ -28,7 +28,7 @@ const PaymentSuccessPage: React.FC = () => {
         success,
         updatedCases,
         error: processError,
-      } = StripeMockService.processMockPaymentSuccess(sessionId);
+      } = MockPaymentService.processMockPaymentSuccess(sessionId);
 
       if (success && updatedCases) {
         setMessage(
