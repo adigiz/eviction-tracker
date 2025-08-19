@@ -2,8 +2,9 @@ import React, { useState, useEffect, useContext, useMemo } from "react";
 import { AuthContext } from "../../App";
 import * as Storage from "../../services/localStorageService";
 import { LegalCase, User, LawFirm, PaymentStatus } from "../../types";
-import Modal from "../../components/Modal";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import LawFirmFormModal from "../../components/forms/LawFirmFormModal";
+import { LawFirmFormData } from "../../lib/validations";
 import { DISCOUNT_AMOUNT } from "../../constants";
 
 interface MonthlyAnalytics {
@@ -33,9 +34,8 @@ const LawFirmPage: React.FC = () => {
   const [lawFirms, setLawFirms] = useState<LawFirm[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFirm, setEditingFirm] = useState<LawFirm | null>(null);
-  const [firmName, setFirmName] = useState("");
-  const [referralCode, setReferralCode] = useState("");
   const [formError, setFormError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -158,16 +158,12 @@ const LawFirmPage: React.FC = () => {
   // --- Law Firm Management Functions ---
   const openModalForNew = () => {
     setEditingFirm(null);
-    setFirmName("");
-    setReferralCode("");
     setFormError("");
     setIsModalOpen(true);
   };
 
   const openModalForEdit = (firm: LawFirm) => {
     setEditingFirm(firm);
-    setFirmName(firm.name);
-    setReferralCode(firm.referralCode);
     setFormError("");
     setIsModalOpen(true);
   };
@@ -192,40 +188,41 @@ const LawFirmPage: React.FC = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setFormError("");
+  const handleSubmit = async (data: LawFirmFormData) => {
+    try {
+      setIsSaving(true);
+      setFormError("");
 
-    if (!firmName.trim() || !referralCode.trim()) {
-      setFormError("Both firm name and referral code are required.");
-      return;
+      if (!isCodeUnique(data.referralCode, editingFirm?.id)) {
+        setFormError(
+          "This referral code is already in use by another firm. Please choose a unique code."
+        );
+        return;
+      }
+
+      if (editingFirm) {
+        const updatedFirm: LawFirm = {
+          ...editingFirm,
+          name: data.firmName.trim(),
+          referralCode: data.referralCode.trim().toUpperCase(),
+        };
+        Storage.updateLawFirm(updatedFirm);
+      } else {
+        const newFirm: LawFirm = {
+          id: Storage.generateId(),
+          name: data.firmName.trim(),
+          referralCode: data.referralCode.trim().toUpperCase(),
+        };
+        Storage.addLawFirm(newFirm);
+      }
+
+      loadData(); // Reload all data
+      setIsModalOpen(false);
+    } catch (error) {
+      setFormError("Failed to save law firm. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-
-    if (!isCodeUnique(referralCode, editingFirm?.id)) {
-      setFormError(
-        "This referral code is already in use by another firm. Please choose a unique code."
-      );
-      return;
-    }
-
-    if (editingFirm) {
-      const updatedFirm: LawFirm = {
-        ...editingFirm,
-        name: firmName.trim(),
-        referralCode: referralCode.trim().toUpperCase(),
-      };
-      Storage.updateLawFirm(updatedFirm);
-    } else {
-      const newFirm: LawFirm = {
-        id: Storage.generateId(),
-        name: firmName.trim(),
-        referralCode: referralCode.trim().toUpperCase(),
-      };
-      Storage.addLawFirm(newFirm);
-    }
-
-    loadData(); // Reload all data
-    setIsModalOpen(false);
   };
 
   if (isLoading) {
@@ -306,23 +303,33 @@ const LawFirmPage: React.FC = () => {
                     </thead>
                     <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                       {Object.entries(analyticsData[month])
-                        .sort(([, a], [, b]) => b.filingCount - a.filingCount)
-                        .map(([firmId, firmData]) => (
-                          <tr
-                            key={firmId}
-                            className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-100">
-                              {firmData.firmName}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">
-                              {firmData.filingCount}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-100 text-right font-semibold">
-                              ${firmData.totalReferralFee.toFixed(2)}
-                            </td>
-                          </tr>
-                        ))}
+                        .sort(
+                          ([, a], [, b]) =>
+                            (b as any).filingCount - (a as any).filingCount
+                        )
+                        .map(([firmId, firmData]) => {
+                          const data = firmData as {
+                            firmName: string;
+                            filingCount: number;
+                            totalReferralFee: number;
+                          };
+                          return (
+                            <tr
+                              key={firmId}
+                              className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                            >
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800 dark:text-gray-100">
+                                {data.firmName}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300 text-center">
+                                {data.filingCount}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-gray-100 text-right font-semibold">
+                                ${data.totalReferralFee.toFixed(2)}
+                              </td>
+                            </tr>
+                          );
+                        })}
                     </tbody>
                   </table>
                 </div>
@@ -450,78 +457,14 @@ const LawFirmPage: React.FC = () => {
       </div>
 
       {/* Modal for Add/Edit */}
-      {isModalOpen && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title={editingFirm ? "Edit Law Firm" : "Add New Law Firm"}
-        >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {formError && (
-              <p className="text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-3 rounded-md border border-red-200 dark:border-red-800">
-                {formError}
-              </p>
-            )}
-
-            <div className="space-y-6">
-              <div>
-                <label
-                  htmlFor="firmName"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Law Firm Name
-                </label>
-                <input
-                  type="text"
-                  id="firmName"
-                  value={firmName}
-                  onChange={(e) => setFirmName(e.target.value)}
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
-                  placeholder="Enter law firm name"
-                  required
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="referralCode"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-                >
-                  Referral Code
-                </label>
-                <input
-                  type="text"
-                  id="referralCode"
-                  value={referralCode}
-                  onChange={(e) => setReferralCode(e.target.value)}
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 font-mono"
-                  placeholder="e.g., FIRM5OFF"
-                  required
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Must be unique. Will be saved in uppercase.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-2 border-2 border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-base font-medium text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500/20 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
-              >
-                {editingFirm ? "Save Changes" : "Add Firm"}
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      <LawFirmFormModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        editingFirm={editingFirm}
+        onSubmit={handleSubmit}
+        formError={formError}
+        isSaving={isSaving}
+      />
 
       <style>{`
                 .btn-primary { 

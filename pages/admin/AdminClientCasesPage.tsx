@@ -11,8 +11,13 @@ import {
 } from "../../types";
 import { AuthContext } from "../../App";
 import * as Storage from "../../services/localStorageService";
-import Modal from "../../components/Modal";
 import LoadingSpinner from "../../components/LoadingSpinner";
+import CaseDetailsModal from "../../components/forms/CaseDetailsModal";
+import PaymentAmendmentModal from "../../components/forms/PaymentAmendmentModal";
+import {
+  CaseDetailsFormData,
+  PaymentAmendmentFormData,
+} from "../../lib/validations";
 import { generateFinalNoticeOfEvictionDatePDF } from "../../services/pdfService";
 
 const statusColors: Record<LegalCaseStatus, string> = {
@@ -45,19 +50,12 @@ const AdminClientCasesPage: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedCaseForDetails, setSelectedCaseForDetails] =
     useState<LegalCase | null>(null);
-  const [editableCaseDetailsInModal, setEditableCaseDetailsInModal] = useState<
-    Partial<LegalCase>
-  >({});
   const [copySuccess, setCopySuccess] = useState("");
 
   const [isAmendPaymentModalOpen, setIsAmendPaymentModalOpen] = useState(false);
   const [caseToAmend, setCaseToAmend] = useState<LegalCase | null>(null);
-  const [paymentAmount, setPaymentAmount] = useState<number | "">("");
-  const [paymentDate, setPaymentDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [paymentNotes, setPaymentNotes] = useState("");
   const [amendError, setAmendError] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (auth?.currentUser?.role !== "admin") {
@@ -118,39 +116,32 @@ const AdminClientCasesPage: React.FC = () => {
 
   const openCaseDetailsModal = (caseItem: LegalCase) => {
     setSelectedCaseForDetails(caseItem);
-    setEditableCaseDetailsInModal({ ...caseItem });
     setCopySuccess("");
     setIsDetailsModalOpen(true);
   };
 
-  const handleModalInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setEditableCaseDetailsInModal((prev) => ({ ...prev, [name]: value }));
-  };
-  const handleModalDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setEditableCaseDetailsInModal((prev) => ({
-      ...prev,
-      [name]: value === "" ? undefined : value,
-    }));
-  };
-
-  const handleAdminUpdateCaseFromModal = () => {
-    if (selectedCaseForDetails && editableCaseDetailsInModal) {
-      let updatedCase = {
-        ...selectedCaseForDetails,
-        ...editableCaseDetailsInModal,
-      } as LegalCase;
-      if (typeof updatedCase.price === "string") {
-        updatedCase.price =
-          parseFloat(updatedCase.price) || selectedCaseForDetails.price;
+  const handleCaseDetailsUpdate = async (data: CaseDetailsFormData) => {
+    try {
+      setIsSaving(true);
+      if (selectedCaseForDetails) {
+        const updatedCase: LegalCase = {
+          ...selectedCaseForDetails,
+          status: data.status,
+          paymentStatus: data.paymentStatus,
+          trialDate: data.trialDate || undefined,
+          districtCourtCaseNumber: data.districtCourtCaseNumber || undefined,
+          contractorId: data.contractorId || undefined,
+          courtOutcomeNotes: data.courtOutcomeNotes || undefined,
+        };
+        Storage.updateLegalCase(updatedCase);
+        setClientCases((prev) =>
+          prev.map((c) => (c.id === updatedCase.id ? updatedCase : c))
+        );
       }
-      handleAdminUpdateCase(updatedCase);
-      setIsDetailsModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update case details:", error);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -171,9 +162,6 @@ const AdminClientCasesPage: React.FC = () => {
       return;
     }
     setCaseToAmend(caseItem);
-    setPaymentAmount("");
-    setPaymentDate(new Date().toISOString().split("T")[0]);
-    setPaymentNotes("");
     setAmendError("");
     setIsAmendPaymentModalOpen(true);
   };
@@ -194,41 +182,50 @@ const AdminClientCasesPage: React.FC = () => {
       selectedCaseForDetails.id === updatedCase.id
     ) {
       setSelectedCaseForDetails(updatedCase);
-      setEditableCaseDetailsInModal(updatedCase);
     }
   };
 
-  const handleAmendPayment = () => {
-    if (!caseToAmend || paymentAmount === "" || Number(paymentAmount) <= 0) {
-      setAmendError("Payment amount must be a positive number.");
-      return;
-    }
-    const amountPaid = Number(paymentAmount);
-    const currentOwed =
-      caseToAmend.currentRentOwed ?? caseToAmend.rentOwedAtFiling;
+  const handlePaymentAmendment = async (data: PaymentAmendmentFormData) => {
+    try {
+      setIsSaving(true);
+      if (!caseToAmend) return;
 
-    if (amountPaid > currentOwed) {
-      setAmendError(
-        `Payment amount ($${amountPaid.toFixed(
-          2
-        )}) cannot exceed current amount owed ($${currentOwed.toFixed(2)}).`
+      const amountPaid = data.paymentAmount;
+      const currentOwed =
+        caseToAmend.currentRentOwed ?? caseToAmend.rentOwedAtFiling;
+
+      if (amountPaid > currentOwed) {
+        setAmendError(
+          `Payment amount ($${amountPaid.toFixed(
+            2
+          )}) cannot exceed current amount owed ($${currentOwed.toFixed(2)}).`
+        );
+        return;
+      }
+
+      const newPaymentRec: PaymentRecord = {
+        date: data.paymentDate,
+        amount: amountPaid,
+        notes: data.paymentNotes || "",
+      };
+
+      const updatedCase: LegalCase = {
+        ...caseToAmend,
+        currentRentOwed: currentOwed - amountPaid,
+        paymentRecords: [...(caseToAmend.paymentRecords || []), newPaymentRec],
+      };
+
+      Storage.updateLegalCase(updatedCase);
+      setClientCases((prev) =>
+        prev.map((c) => (c.id === updatedCase.id ? updatedCase : c))
       );
-      return;
+      setIsAmendPaymentModalOpen(false);
+    } catch (error) {
+      console.error("Failed to amend payment:", error);
+      setAmendError("Failed to amend payment. Please try again.");
+    } finally {
+      setIsSaving(false);
     }
-
-    const newPaymentRec: PaymentRecord = {
-      date: paymentDate,
-      amount: amountPaid,
-      notes: paymentNotes.trim() || undefined,
-    };
-    const updatedCase: LegalCase = {
-      ...caseToAmend,
-      currentRentOwed: currentOwed - amountPaid,
-      paymentsMade: [...(caseToAmend.paymentsMade || []), newPaymentRec],
-    };
-    handleAdminUpdateCase(updatedCase);
-    setIsAmendPaymentModalOpen(false);
-    setCaseToAmend(null);
   };
 
   const handleAdminStatusUpdate = (
@@ -456,295 +453,23 @@ const AdminClientCasesPage: React.FC = () => {
         </div>
       )}
 
-      {isDetailsModalOpen && selectedCaseForDetails && (
-        <Modal
-          isOpen={isDetailsModalOpen}
-          onClose={() => setIsDetailsModalOpen(false)}
-          title={`Admin Edit: Case ${
-            editableCaseDetailsInModal.districtCourtCaseNumber ||
-            selectedCaseForDetails.id.substring(0, 8)
-          }`}
-          size="3xl"
-        >
-          <div className="space-y-4 p-4 text-gray-700 dark:text-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
-              Client: {client?.name}
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium">Case Status</label>
-                <select
-                  name="status"
-                  value={editableCaseDetailsInModal.status}
-                  onChange={handleModalInputChange}
-                  className="input-sm"
-                >
-                  {Object.values(LegalCaseStatus).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  Payment Status
-                </label>
-                <select
-                  name="paymentStatus"
-                  value={editableCaseDetailsInModal.paymentStatus}
-                  onChange={handleModalInputChange}
-                  className="input-sm"
-                >
-                  {Object.values(PaymentStatus).map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Trial Date</label>
-                <input
-                  type="date"
-                  name="trialDate"
-                  value={editableCaseDetailsInModal.trialDate || ""}
-                  onChange={handleModalDateChange}
-                  className="input-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  Notice Mailed Date
-                </label>
-                <input
-                  type="date"
-                  name="noticeMailedDate"
-                  value={editableCaseDetailsInModal.noticeMailedDate || ""}
-                  onChange={handleModalDateChange}
-                  className="input-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  Court Case Number (General)
-                </label>
-                <input
-                  type="text"
-                  name="courtCaseNumber"
-                  value={editableCaseDetailsInModal.courtCaseNumber || ""}
-                  onChange={handleModalInputChange}
-                  className="input-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  District Court Case Number
-                </label>
-                <input
-                  type="text"
-                  name="districtCourtCaseNumber"
-                  value={
-                    editableCaseDetailsInModal.districtCourtCaseNumber || ""
-                  }
-                  onChange={handleModalInputChange}
-                  className="input-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">Price ($)</label>
-                <input
-                  type="number"
-                  name="price"
-                  value={editableCaseDetailsInModal.price ?? ""}
-                  onChange={handleModalInputChange}
-                  step="0.01"
-                  className="input-sm"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium">
-                  Current Rent Owed ($)
-                </label>
-                <input
-                  type="number"
-                  name="currentRentOwed"
-                  value={editableCaseDetailsInModal.currentRentOwed ?? ""}
-                  onChange={handleModalInputChange}
-                  step="0.01"
-                  className="input-sm"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium">
-                Court Outcome Notes
-              </label>
-              <textarea
-                name="courtOutcomeNotes"
-                value={editableCaseDetailsInModal.courtOutcomeNotes || ""}
-                onChange={handleModalInputChange}
-                rows={3}
-                className="input-sm"
-              />
-            </div>
+      <CaseDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        caseItem={selectedCaseForDetails!}
+        onSubmit={handleCaseDetailsUpdate}
+        formError=""
+        isSaving={isSaving}
+      />
 
-            {selectedCaseForDetails.generatedDocuments.evictionNotice && (
-              <div className="mt-2 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-100 dark:bg-gray-900/50">
-                <div className="flex justify-between items-center mb-1">
-                  <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                    AI-Generated Eviction Notice (Original)
-                  </h4>
-                  <button
-                    onClick={() =>
-                      copyToClipboard(
-                        selectedCaseForDetails.generatedDocuments
-                          .evictionNotice!,
-                        "Eviction Notice"
-                      )
-                    }
-                    className="btn-secondary text-xs py-1 px-2"
-                  >
-                    Copy
-                  </button>
-                </div>
-                <pre className="whitespace-pre-wrap text-xs max-h-40 overflow-y-auto text-gray-600 dark:text-gray-300">
-                  {selectedCaseForDetails.generatedDocuments.evictionNotice}
-                </pre>
-              </div>
-            )}
-            {selectedCaseForDetails.paymentStatus === PaymentStatus.PAID && (
-              <button
-                onClick={() =>
-                  handleDownloadFinalNoticePDF(selectedCaseForDetails)
-                }
-                className="w-full mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md"
-              >
-                Download "Final Notice of Eviction Date" PDF
-              </button>
-            )}
-            {copySuccess && (
-              <p className="text-sm text-green-400 mt-1">{copySuccess}</p>
-            )}
-
-            <div className="flex justify-end space-x-2 pt-4 border-t border-gray-300 dark:border-gray-700">
-              <button
-                onClick={() => setIsDetailsModalOpen(false)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdminUpdateCaseFromModal}
-                className="btn-primary"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
-
-      {isAmendPaymentModalOpen && caseToAmend && (
-        <Modal
-          isOpen={isAmendPaymentModalOpen}
-          onClose={() => setIsAmendPaymentModalOpen(false)}
-          title={`Admin: Record Payment for Case ${
-            caseToAmend.districtCourtCaseNumber ||
-            caseToAmend.id.substring(0, 8)
-          }`}
-          size="md"
-        >
-          <div className="space-y-4 p-4 text-gray-700 dark:text-gray-200">
-            {amendError && (
-              <p className="text-sm text-red-300 bg-red-500/20 p-2 rounded-md">
-                {amendError}
-              </p>
-            )}
-            <p className="text-sm">
-              Client: <strong>{client?.name}</strong>
-            </p>
-            <p className="text-sm">
-              Current Amount Due:{" "}
-              <strong>
-                $
-                {(
-                  caseToAmend.currentRentOwed ?? caseToAmend.rentOwedAtFiling
-                ).toFixed(2)}
-              </strong>
-            </p>
-            <div>
-              <label
-                htmlFor="paymentAmount"
-                className="block text-sm font-medium"
-              >
-                Amount Paid <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="paymentAmount"
-                value={paymentAmount}
-                onChange={(e) =>
-                  setPaymentAmount(
-                    e.target.value === "" ? "" : parseFloat(e.target.value)
-                  )
-                }
-                min="0.01"
-                step="0.01"
-                required
-                className="input-sm"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="paymentDate"
-                className="block text-sm font-medium"
-              >
-                Date Paid <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="date"
-                id="paymentDate"
-                value={paymentDate}
-                onChange={(e) => setPaymentDate(e.target.value)}
-                required
-                className="input-sm"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="paymentNotes"
-                className="block text-sm font-medium"
-              >
-                Notes
-              </label>
-              <textarea
-                id="paymentNotes"
-                value={paymentNotes}
-                onChange={(e) => setPaymentNotes(e.target.value)}
-                rows={2}
-                className="input-sm"
-              />
-            </div>
-            <div className="flex justify-end space-x-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsAmendPaymentModalOpen(false)}
-                className="btn-secondary"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleAmendPayment}
-                className="btn-amend"
-              >
-                Record Payment
-              </button>
-            </div>
-          </div>
-        </Modal>
-      )}
+      <PaymentAmendmentModal
+        isOpen={isAmendPaymentModalOpen}
+        onClose={() => setIsAmendPaymentModalOpen(false)}
+        caseItem={caseToAmend!}
+        onSubmit={handlePaymentAmendment}
+        formError={amendError}
+        isSaving={isSaving}
+      />
 
       <style>{`
         .btn-outline { @apply py-1 px-3 border border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors; }
