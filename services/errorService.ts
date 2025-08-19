@@ -32,7 +32,7 @@ class ToastErrorService implements ErrorService {
   }
 
   showWarning(message: string): void {
-    toast.warning(message, {
+    toast(message, {
       duration: 4000,
       position: 'top-right',
       style: {

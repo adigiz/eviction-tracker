@@ -59,15 +59,17 @@ export interface DataService {
 export class LocalStorageDataService implements DataService {
   // User operations
   getCurrentUser(): User | null {
-    return Storage.getCurrentUser();
+    return Storage.getPersistedUser();
   }
 
   updateUser(user: User): void {
-    Storage.updateUser(user);
+    Storage.persistUser(user);
   }
 
   createUser(user: User): void {
-    Storage.createUser(user);
+    // Note: This would need to be implemented in localStorageService
+    // For now, we'll just persist the user
+    Storage.persistUser(user);
   }
 
   deleteUser(userId: string): void {
@@ -75,32 +77,42 @@ export class LocalStorageDataService implements DataService {
   }
 
   getAllUsers(): User[] {
-    return Storage.getAllUsers();
+    return Storage.getAllRegisteredUsers();
   }
 
   getUserById(userId: string): User | null {
-    return Storage.getUserById(userId);
+    const allUsers = Storage.getAllRegisteredUsers();
+    return allUsers.find(user => user.id === userId) || null;
   }
 
   getUserByUsername(username: string): User | null {
-    return Storage.getUserByUsername(username);
+    const allUsers = Storage.getAllRegisteredUsers();
+    return allUsers.find(user => user.username === username) || null;
   }
 
   // Property operations
   getPropertiesByLandlord(landlordId: string): Property[] {
-    return Storage.getPropertiesByLandlord(landlordId);
+    return Storage.getProperties(landlordId);
   }
 
   getAllProperties(): Property[] {
-    return Storage.getAllProperties();
+    // Get all properties from all landlords
+    const allLandlords = Storage.getAllLandlordUsers();
+    return allLandlords.flatMap(landlord => Storage.getProperties(landlord.id));
   }
 
   getPropertyById(propertyId: string): Property | null {
-    return Storage.getPropertyById(propertyId);
+    const allLandlords = Storage.getAllLandlordUsers();
+    for (const landlord of allLandlords) {
+      const properties = Storage.getProperties(landlord.id);
+      const property = properties.find(p => p.id === propertyId);
+      if (property) return property;
+    }
+    return null;
   }
 
   createProperty(property: Property): void {
-    Storage.createProperty(property);
+    Storage.addProperty(property);
   }
 
   updateProperty(property: Property): void {
@@ -113,19 +125,27 @@ export class LocalStorageDataService implements DataService {
 
   // Tenant operations
   getTenantsByLandlord(landlordId: string): Tenant[] {
-    return Storage.getTenantsByLandlord(landlordId);
+    return Storage.getTenants(landlordId);
   }
 
   getAllTenants(): Tenant[] {
-    return Storage.getAllTenants();
+    // Get all tenants from all landlords
+    const allLandlords = Storage.getAllLandlordUsers();
+    return allLandlords.flatMap(landlord => Storage.getTenants(landlord.id));
   }
 
   getTenantById(tenantId: string): Tenant | null {
-    return Storage.getTenantById(tenantId);
+    const allLandlords = Storage.getAllLandlordUsers();
+    for (const landlord of allLandlords) {
+      const tenants = Storage.getTenants(landlord.id);
+      const tenant = tenants.find(t => t.id === tenantId);
+      if (tenant) return tenant;
+    }
+    return null;
   }
 
   createTenant(tenant: Tenant): void {
-    Storage.createTenant(tenant);
+    Storage.addTenant(tenant);
   }
 
   updateTenant(tenant: Tenant): void {
@@ -138,19 +158,25 @@ export class LocalStorageDataService implements DataService {
 
   // Legal Case operations
   getCasesByLandlord(landlordId: string): LegalCase[] {
-    return Storage.getLegalCasesByLandlord(landlordId);
+    return Storage.getLegalCases(landlordId);
   }
 
   getAllCases(): LegalCase[] {
-    return Storage.getAllLegalCases();
+    return Storage.getAllLegalCasesForAdmin();
   }
 
   getCaseById(caseId: string): LegalCase | null {
-    return Storage.getLegalCaseById(caseId);
+    const allLandlords = Storage.getAllLandlordUsers();
+    for (const landlord of allLandlords) {
+      const cases = Storage.getLegalCases(landlord.id);
+      const legalCase = cases.find(c => c.id === caseId);
+      if (legalCase) return legalCase;
+    }
+    return null;
   }
 
   createCase(legalCase: LegalCase): void {
-    Storage.createLegalCase(legalCase);
+    Storage.addLegalCase(legalCase);
   }
 
   updateCase(legalCase: LegalCase): void {
@@ -163,15 +189,16 @@ export class LocalStorageDataService implements DataService {
 
   // Law Firm operations
   getAllLawFirms(): LawFirm[] {
-    return Storage.getAllLawFirms();
+    return Storage.getLawFirms();
   }
 
   getLawFirmById(firmId: string): LawFirm | null {
-    return Storage.getLawFirmById(firmId);
+    const allFirms = Storage.getLawFirms();
+    return allFirms.find(firm => firm.id === firmId) || null;
   }
 
   createLawFirm(lawFirm: LawFirm): void {
-    Storage.createLawFirm(lawFirm);
+    Storage.addLawFirm(lawFirm);
   }
 
   updateLawFirm(lawFirm: LawFirm): void {

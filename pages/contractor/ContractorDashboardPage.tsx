@@ -289,7 +289,9 @@ const ContractorDashboardPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myJobs.map((job) => (
-              <JobCard key={job.id} job={job} isClaimed={true} />
+              <React.Fragment key={job.id}>
+                <JobCard job={job} isClaimed={true} />
+              </React.Fragment>
             ))}
           </div>
         )}
@@ -307,7 +309,9 @@ const ContractorDashboardPage: React.FC = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {availableJobs.map((job) => (
-              <JobCard key={job.id} job={job} isClaimed={false} />
+              <React.Fragment key={job.id}>
+                <JobCard job={job} isClaimed={false} />
+              </React.Fragment>
             ))}
           </div>
         )}

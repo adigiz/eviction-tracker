@@ -9,7 +9,7 @@ export const useZodForm = <T extends FieldValues>(
 ) => {
   return useForm<T>({
     ...options,
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as any,
     mode: options?.mode || 'onBlur', // Validate on blur for better UX
   });
 };
@@ -56,7 +56,7 @@ export const isFieldTouched = <T extends FieldValues>(
   form: ReturnType<typeof useForm<T>>,
   fieldName: Path<T>
 ) => {
-  return form.formState.touchedFields[fieldName] || false;
+  return (form.formState.touchedFields as any)[fieldName] || false;
 };
 
 // Helper for determining if error should be shown
