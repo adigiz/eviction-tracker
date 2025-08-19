@@ -16,6 +16,7 @@ import {
   generateFinalNoticeOfEvictionDatePDF,
   generateBulkFinalNoticeOfEvictionDatePDF,
 } from "../../services/pdfService";
+import { errorService } from "../../services/errorService";
 
 const statusColors: Record<LegalCaseStatus, string> = {
   [LegalCaseStatus.NOTICE_DRAFT]: "bg-yellow-100 text-yellow-800",
@@ -43,9 +44,14 @@ const AdminAllCasesPage: React.FC = () => {
 
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [selectedCase, setSelectedCase] = useState<LegalCase | null>(null);
-  const [selectedCaseLandlord, setSelectedCaseLandlord] = useState<User | null>(null);
-  const [selectedCaseProperty, setSelectedCaseProperty] = useState<Property | null>(null);
-  const [selectedCaseTenant, setSelectedCaseTenant] = useState<Tenant | null>(null);
+  const [selectedCaseLandlord, setSelectedCaseLandlord] = useState<User | null>(
+    null
+  );
+  const [selectedCaseProperty, setSelectedCaseProperty] =
+    useState<Property | null>(null);
+  const [selectedCaseTenant, setSelectedCaseTenant] = useState<Tenant | null>(
+    null
+  );
 
   const [bulkPdfStartDate, setBulkPdfStartDate] = useState("");
   const [bulkPdfEndDate, setBulkPdfEndDate] = useState("");
@@ -116,16 +122,18 @@ const AdminAllCasesPage: React.FC = () => {
     );
     setIsDetailsModalOpen(false);
     setSelectedCase(null);
-    alert("Case details updated by Admin.");
+    errorService.showSuccess("Case details updated by Admin.");
   };
 
   const handleDownloadFinalNoticePDF = (caseItem: LegalCase) => {
     if (caseItem.paymentStatus !== PaymentStatus.PAID) {
-      alert("This notice can only be generated for paid cases.");
+      errorService.showWarning(
+        "This notice can only be generated for paid cases."
+      );
       return;
     }
     if (!auth?.currentUser) {
-      alert("Admin user not found.");
+      errorService.showError("Admin user not found.");
       return;
     }
     const property = allProperties.find((p) => p.id === caseItem.propertyId);
@@ -141,7 +149,7 @@ const AdminAllCasesPage: React.FC = () => {
         auth.currentUser
       );
     } else {
-      alert(
+      errorService.showError(
         "Could not find all necessary data (property, tenant, or landlord) to generate the PDF."
       );
     }
@@ -149,11 +157,13 @@ const AdminAllCasesPage: React.FC = () => {
 
   const handleBulkDownloadPDFs = () => {
     if (!bulkPdfStartDate || !bulkPdfEndDate) {
-      alert("Please select both a start and end date for the bulk download.");
+      errorService.showWarning(
+        "Please select both a start and end date for the bulk download."
+      );
       return;
     }
     if (!auth?.currentUser) {
-      alert("Admin user not found.");
+      errorService.showError("Admin user not found.");
       return;
     }
 
@@ -170,14 +180,22 @@ const AdminAllCasesPage: React.FC = () => {
     });
 
     if (filteredCases.length === 0) {
-      alert("No paid cases found in the selected date range.");
+      errorService.showWarning(
+        "No paid cases found in the selected date range."
+      );
       return;
     }
 
     // Prepare maps for efficient lookup
-    const propertiesMap = new Map<string, Property>(allProperties.map((p) => [p.id, p]));
-    const tenantsMap = new Map<string, Tenant>(allTenants.map((t) => [t.id, t]));
-    const landlordsMap = new Map<string, User>(allLandlords.map((l) => [l.id, l]));
+    const propertiesMap = new Map<string, Property>(
+      allProperties.map((p) => [p.id, p])
+    );
+    const tenantsMap = new Map<string, Tenant>(
+      allTenants.map((t) => [t.id, t])
+    );
+    const landlordsMap = new Map<string, User>(
+      allLandlords.map((l) => [l.id, l])
+    );
 
     generateBulkFinalNoticeOfEvictionDatePDF(
       filteredCases,

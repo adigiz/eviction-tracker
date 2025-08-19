@@ -247,7 +247,7 @@ export const generateBulkFinalNoticeOfEvictionDatePDF = (
   if (cases.length > 0) {
     doc.save(`Bulk_Final_Notices_${new Date().toISOString().split('T')[0]}.pdf`);
   } else {
-    alert("No paid cases found in the selected date range to generate PDF.");
+    // No paid cases found in the selected date range to generate PDF
   }
 };
 

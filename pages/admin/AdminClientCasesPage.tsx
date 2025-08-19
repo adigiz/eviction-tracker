@@ -19,6 +19,7 @@ import {
   PaymentAmendmentFormData,
 } from "../../lib/validations";
 import { generateFinalNoticeOfEvictionDatePDF } from "../../services/pdfService";
+import { errorService } from "../../services/errorService";
 
 const statusColors: Record<LegalCaseStatus, string> = {
   [LegalCaseStatus.NOTICE_DRAFT]: "bg-yellow-100 text-yellow-800",
@@ -147,7 +148,7 @@ const AdminClientCasesPage: React.FC = () => {
 
   const openAmendPaymentModal = (caseItem: LegalCase) => {
     if (caseItem.paymentStatus !== PaymentStatus.PAID) {
-      alert(
+      errorService.showWarning(
         "Client must complete payment for this request before tenant payments can be recorded by Admin."
       );
       return;
@@ -156,7 +157,7 @@ const AdminClientCasesPage: React.FC = () => {
       caseItem.status !== LegalCaseStatus.SUBMITTED &&
       caseItem.status !== LegalCaseStatus.IN_PROGRESS
     ) {
-      alert(
+      errorService.showWarning(
         "Payments can only be recorded for cases that are Submitted or In Progress."
       );
       return;
@@ -246,12 +247,14 @@ const AdminClientCasesPage: React.FC = () => {
 
   const handleDownloadFinalNoticePDF = (caseItem: LegalCase) => {
     if (caseItem.paymentStatus !== PaymentStatus.PAID) {
-      alert("This notice can only be generated for paid cases.");
+      errorService.showWarning(
+        "This notice can only be generated for paid cases."
+      );
       return;
     }
     if (!auth?.currentUser || !client) {
       // client should be non-null here
-      alert("Admin user or client data not found.");
+      errorService.showError("Admin user or client data not found.");
       return;
     }
     const property = clientProperties.find((p) => p.id === caseItem.propertyId);
@@ -266,7 +269,7 @@ const AdminClientCasesPage: React.FC = () => {
         auth.currentUser
       );
     } else {
-      alert(
+      errorService.showError(
         "Could not find all necessary data (property or tenant) to generate the PDF."
       );
     }

@@ -54,7 +54,7 @@ export const createMockCheckoutSession = async (
     Storage.updateLegalCase(updatedCase);
   });
 
-  console.log(`Mock Checkout Session created: ${sessionId} for ${items.length} items, total $${totalAmount.toFixed(2)}`);
+      // Mock checkout session created successfully
   return { sessionId };
 };
 
@@ -96,7 +96,7 @@ export const processMockPaymentSuccess = (sessionId: string): { success: boolean
     session.status = 'complete';
     localStorage.setItem(`${STRIPE_CHECKOUT_SESSION_KEY_PREFIX}${sessionId}`, JSON.stringify(session));
     
-    console.log(`Mock Payment Success processed for session: ${sessionId}. Cases moved to SUBMITTED.`);
+    // Mock payment success processed
     return { success: true, updatedCases };
 
   } catch (error) {
@@ -128,7 +128,7 @@ export const processMockPaymentCancel = (sessionId: string): { success: boolean,
     session.status = 'expired'; 
     localStorage.setItem(`${STRIPE_CHECKOUT_SESSION_KEY_PREFIX}${sessionId}`, JSON.stringify(session));
     
-    console.log(`Mock Payment Cancelled for session: ${sessionId}. Items reverted to Unpaid.`);
+    // Mock payment cancelled
     return { success: true };
 
   } catch (error) {

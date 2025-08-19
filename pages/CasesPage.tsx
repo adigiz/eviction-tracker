@@ -15,6 +15,7 @@ import Modal from "../components/Modal";
 import FailureToPayRentForm from "../components/forms/FailureToPayRentForm";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { generateEvictionNoticeContent } from "../services/documentGeneratorService";
+import { errorService } from "../services/errorService";
 
 const statusColors: Record<LegalCaseStatus, string> = {
   [LegalCaseStatus.NOTICE_DRAFT]:
@@ -192,7 +193,9 @@ const CasesPage: React.FC = () => {
         auth?.updateCartCount?.();
       }
     } else {
-      alert("Only unpaid notice drafts can be deleted this way.");
+      errorService.showWarning(
+        "Only unpaid notice drafts can be deleted this way."
+      );
     }
   };
 
@@ -250,7 +253,7 @@ const CasesPage: React.FC = () => {
           }
           return updatedCase;
         } catch (error) {
-          alert(
+          errorService.showError(
             "Failed to generate initial Eviction notice. Please try again or contact support."
           );
         } finally {
@@ -285,9 +288,11 @@ const CasesPage: React.FC = () => {
 
   const handleSimulatedDownload = (filename?: string) => {
     if (filename) {
-      alert(`Download started for ${filename}. (This is a simulation)`);
+      errorService.showInfo(
+        `Download started for ${filename}. (This is a simulation)`
+      );
     } else {
-      alert("No file to download. (This is a simulation)");
+      errorService.showWarning("No file to download. (This is a simulation)");
     }
   };
 

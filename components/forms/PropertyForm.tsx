@@ -7,6 +7,7 @@ import { useZodForm, useFormSubmission } from "../../hooks/useZodForm";
 import { FormProvider } from "react-hook-form";
 import { FormInput } from "../ui/FormInput";
 import { propertyFormSchema, PropertyFormData } from "../../lib/validations";
+import { errorService } from "../../services/errorService";
 
 interface PropertyFormProps {
   onSubmit: (data: { property: Property; tenant?: Tenant }) => void;
@@ -46,7 +47,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     async (data: any) => {
       const typedData = data as PropertyFormData;
       if (!auth?.currentUser) {
-        alert("User not logged in.");
+        errorService.showError("User not logged in.");
         return;
       }
 

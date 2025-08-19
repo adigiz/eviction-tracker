@@ -183,3 +183,40 @@ export type TenantData = z.infer<typeof tenantSchema>;
 export type AccountEditFormData = z.infer<typeof accountEditFormSchema>;
 export type AccountEditData = z.infer<typeof accountEditSchema>;
 export type PasswordChangeData = z.infer<typeof passwordChangeSchema>;
+
+// FTPR Form Schema
+export const ftprFormSchema = z.object({
+  tenantId: z.string().min(1, { error: "Tenant selection is required" }),
+  propertyId: z.string().min(1, { error: "Property selection is required" }),
+  noRightOfRedemption: z.boolean(),
+  rentOwed: z.number().min(0.01, { error: "Amount must be greater than 0" }).optional(),
+  districtCourtCaseNumber: z.string().min(1, { error: "District Court Case Number is required" }),
+  warrantOrderDate: z.string().min(1, { error: "Warrant order date is required" }),
+  initialEvictionDate: z.string().min(1, { error: "Initial eviction date is required" }),
+  landlordSignature: z.string().min(1, { error: "Landlord signature is required" }),
+  thirtyDayNoticeFile: z.any().optional(), // File object
+}).refine((data) => {
+  // If no right of redemption, rent owed is not required
+  if (data.noRightOfRedemption) {
+    return true;
+  }
+  // If right of redemption exists, rent owed is required
+  return data.rentOwed !== undefined && data.rentOwed > 0;
+}, {
+  error: "Amount Due to Redeem the Property is required when tenant can pay to stay",
+  path: ["rentOwed"],
+}).refine((data) => {
+  // Validate eviction date is at least 17 days from today
+  if (!data.initialEvictionDate) return true;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const evictionDate = new Date(data.initialEvictionDate + "T00:00:00");
+  const diffTime = evictionDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays >= 17;
+}, {
+  error: "Initial Scheduled Date of Eviction must be at least 17 days from today",
+  path: ["initialEvictionDate"],
+});
+
+export type FTPRFormData = z.infer<typeof ftprFormSchema>;

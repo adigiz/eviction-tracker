@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import Modal from "../Modal";
-import { LegalCase, User, Property, Tenant, LegalCaseStatus, PaymentStatus } from "../../types";
+import {
+  LegalCase,
+  User,
+  Property,
+  Tenant,
+  LegalCaseStatus,
+  PaymentStatus,
+} from "../../types";
+import { errorService } from "../../services/errorService";
 
 interface AdminCaseDetailsModalProps {
   isOpen: boolean;
@@ -23,7 +31,9 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
   allContractors,
   onSave,
 }) => {
-  const [editableCaseDetails, setEditableCaseDetails] = useState<Partial<LegalCase>>({});
+  const [editableCaseDetails, setEditableCaseDetails] = useState<
+    Partial<LegalCase>
+  >({});
 
   useEffect(() => {
     if (caseItem) {
@@ -32,7 +42,9 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
   }, [caseItem]);
 
   const handleModalInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
   ) => {
     const { name, value } = e.target;
     setEditableCaseDetails((prev) => ({ ...prev, [name]: value }));
@@ -75,7 +87,7 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
           !!editableCaseDetails.uploadedDocument1FileName;
 
         if (!allDocsUploaded) {
-          alert(
+          errorService.showWarning(
             "Cannot save as 'Complete'. All 4 required documents must be uploaded first."
           );
           return; // Stop the save
@@ -86,7 +98,7 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
         ...caseItem,
         ...editableCaseDetails,
       } as LegalCase;
-      
+
       onSave(updatedCaseData);
       onClose();
     }
@@ -133,10 +145,12 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
             <strong>Tenant(s):</strong> {tenant.tenantNames.join(" & ")}
           </p>
           <p className="text-gray-800 dark:text-gray-200">
-            <strong>Date Initiated:</strong> {formatDateForDisplay(caseItem.dateInitiated)}
+            <strong>Date Initiated:</strong>{" "}
+            {formatDateForDisplay(caseItem.dateInitiated)}
           </p>
           <p className="text-gray-800 dark:text-gray-200">
-            <strong>Amount Due (submission):</strong> ${caseItem.rentOwedAtFiling.toFixed(2)}
+            <strong>Amount Due (submission):</strong> $
+            {caseItem.rentOwedAtFiling.toFixed(2)}
           </p>
           <p className="text-gray-800 dark:text-gray-200">
             <strong>Current Total Amount Due:</strong> $
@@ -286,7 +300,8 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
             Manage Uploaded Documents
           </h3>
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-3">
-            Note: Only filenames are stored. Actual file content is not saved in this demo application.
+            Note: Only filenames are stored. Actual file content is not saved in
+            this demo application.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {documentFieldsConfig.map((docConfig) => (
@@ -330,7 +345,8 @@ const AdminCaseDetailsModal: React.FC<AdminCaseDetailsModalProps> = ({
             </button>
             {!areAllDocumentsUploaded && (
               <p className="text-xs text-center text-red-400 mt-1">
-                All 4 documents must be uploaded before this action is available.
+                All 4 documents must be uploaded before this action is
+                available.
               </p>
             )}
           </div>

@@ -13,6 +13,7 @@ import * as Storage from "../../services/localStorageService";
 import LoadingSpinner from "../../components/LoadingSpinner";
 import Modal from "../../components/Modal";
 import { generateFinalNoticeOfEvictionDatePDF } from "../../services/pdfService";
+import { errorService } from "../../services/errorService";
 
 const ContractorDashboardPage: React.FC = () => {
   const auth = useContext(AuthContext);
@@ -152,7 +153,7 @@ const ContractorDashboardPage: React.FC = () => {
         auth.currentUser
       );
     } else {
-      alert(
+      errorService.showError(
         "Could not generate PDF. Missing required information for the case."
       );
     }
