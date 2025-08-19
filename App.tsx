@@ -11,6 +11,7 @@ import { APP_NAME } from "./constants";
 import { seedInitialData } from "./services/seedDataService";
 import { useAuth } from "./hooks/useAuth";
 import * as Storage from "./services/localStorageService";
+import { Toaster } from "react-hot-toast";
 
 import Navbar from "./components/Navbar";
 import AuthForm from "./components/AuthForm";
@@ -80,7 +81,7 @@ const AdminRoutes: React.FC = () => {
   const auth = useContext(AuthContext);
   if (auth?.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <LoadingSpinner text="Verifying admin access..." size="lg" />
       </div>
     );
@@ -96,7 +97,7 @@ const ContractorRoutes: React.FC = () => {
   const auth = useContext(AuthContext);
   if (auth?.isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900">
         <LoadingSpinner text="Verifying contractor access..." size="lg" />
       </div>
     );
@@ -141,8 +142,8 @@ const App: React.FC = () => {
     <footer
       className={`text-center p-4 text-xs ${
         currentUser?.role === "admin"
-          ? "bg-gray-900 text-white"
-          : "bg-gray-800 text-white"
+          ? "bg-gray-200 dark:bg-gray-900 text-gray-800 dark:text-white"
+          : "bg-gray-200 dark:bg-gray-800 text-gray-800 dark:text-white"
       }`}
     >
       &copy; {new Date().getFullYear()} {APP_NAME}. For demonstration purposes
@@ -160,7 +161,7 @@ const App: React.FC = () => {
               <main
                 className={`flex-grow ${
                   currentUser?.role === "admin"
-                    ? "bg-gray-900 text-gray-200"
+                    ? "bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
                     : "bg-gray-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200"
                 }`}
               >
@@ -296,6 +297,7 @@ const App: React.FC = () => {
           )}
         </HashRouter>
       </AuthContext.Provider>
+      <Toaster />
     </ThemeProvider>
   );
 };

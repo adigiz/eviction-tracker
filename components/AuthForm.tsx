@@ -205,7 +205,7 @@ const AuthForm: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full flex justify-center items-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-4 focus:ring-primary-500/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+              className="w-full flex justify-center items-center py-3 px-6 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-gradient-to-r from-primary-600 to-primary-700 hover:from-primary-700 hover:to-primary-800 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
             >
               {isSubmitting ? (
                 <div className="flex items-center space-x-2">
@@ -267,7 +267,7 @@ const AuthForm: React.FC = () => {
             <button
               type="button"
               onClick={handleNavigateToSignUp}
-              className="w-full flex justify-center items-center py-3 px-6 border-2 border-primary-200 dark:border-primary-700 rounded-xl shadow-sm text-base font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:outline-none focus:ring-4 focus:ring-primary-500/20 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
+              className="w-full flex justify-center items-center py-3 px-6 border-2 border-primary-200 dark:border-primary-700 rounded-lg shadow-sm text-base font-medium text-primary-700 dark:text-primary-300 bg-primary-50 dark:bg-primary-900/20 hover:bg-primary-100 dark:hover:bg-primary-900/40 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
               disabled={isSubmitting}
             >
               <svg
@@ -314,11 +314,11 @@ const AuthForm: React.FC = () => {
                 <span>
                   Landlord:{" "}
                   <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
-                    demo_landlord
+                    landlord
                   </code>{" "}
                   /{" "}
                   <code className="bg-gray-200 dark:bg-gray-700 px-1 rounded">
-                    demo123
+                    landlord123
                   </code>
                 </span>
               </p>

@@ -289,20 +289,20 @@ const AdminClientCasesPage: React.FC = () => {
       <div className="mb-8">
         <Link
           to="/admin/clients"
-          className="text-sm text-primary-400 hover:underline"
+          className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
         >
           &larr; Back to Clients List
         </Link>
-        <h1 className="text-3xl font-bold text-gray-100 mt-2">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mt-2">
           Cases for Client: {client.name}
         </h1>
-        <p className="text-gray-400 text-sm">
+        <p className="text-gray-600 dark:text-gray-400 text-sm">
           Username: {client.username} (Admin View)
         </p>
       </div>
 
       {clientCases.length === 0 ? (
-        <p className="text-center py-10 bg-gray-800 rounded-lg shadow">
+        <p className="text-center py-10 bg-white dark:bg-gray-800 rounded-lg shadow">
           This client has no eviction letter requests.
         </p>
       ) : (
@@ -320,7 +320,7 @@ const AdminClientCasesPage: React.FC = () => {
             return (
               <div
                 key={caseItem.id}
-                className="bg-gray-800 text-gray-200 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden"
+                className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 overflow-hidden"
               >
                 <div className="p-6">
                   <div className="flex flex-col sm:flex-row justify-between sm:items-start mb-2">
@@ -337,7 +337,7 @@ const AdminClientCasesPage: React.FC = () => {
                       <span
                         className={`text-xs font-semibold inline-block py-1 px-3 uppercase rounded-full ${
                           statusColors[caseItem.status] ||
-                          "bg-gray-700 text-gray-300"
+                          "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                         }`}
                       >
                         Case Status: {caseItem.status}
@@ -346,7 +346,8 @@ const AdminClientCasesPage: React.FC = () => {
                         className={`text-xs font-semibold inline-block py-1 px-3 uppercase rounded-full ${
                           paymentStatusColorsAdminClient[
                             caseItem.paymentStatus
-                          ] || "bg-gray-700 text-gray-300"
+                          ] ||
+                          "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
                         }`}
                       >
                         Payment: {caseItem.paymentStatus}
@@ -369,7 +370,7 @@ const AdminClientCasesPage: React.FC = () => {
                           e.target.value as LegalCaseStatus
                         )
                       }
-                      className="text-xs p-1 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-gray-700 text-gray-200 border-gray-600"
+                      className="text-xs p-1 border rounded-md focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600"
                       title="Admin: Quickly update status"
                     >
                       {Object.values(LegalCaseStatus).map((s) => (
@@ -392,57 +393,59 @@ const AdminClientCasesPage: React.FC = () => {
                     </button>
                   </div>
 
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Tenant: {displayTenantNames(tenant?.tenantNames)}
                   </p>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Property: {property?.address}
                     {property?.unit ? `, ${property.unit}` : ""}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Contractor:{" "}
                     {caseItem.contractorId ? (
                       getContractorName(caseItem.contractorId)
                     ) : (
-                      <span className="text-gray-500 italic">Unassigned</span>
+                      <span className="text-gray-500 dark:text-gray-500 italic">
+                        Unassigned
+                      </span>
                     )}
                   </p>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Amount Due (submitted): $
                     {caseItem.rentOwedAtFiling.toFixed(2)}
                   </p>
-                  <p className="text-sm font-semibold text-gray-100">
+                  <p className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                     Current Amount Due: ${currentOwedDisplay.toFixed(2)}
                   </p>
-                  <p className="text-sm text-gray-400">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Price: ${caseItem.price.toFixed(2)}
                   </p>
-                  <p className="text-sm text-gray-300">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Initiated: {formatDateForDisplay(caseItem.dateInitiated)}
                   </p>
                   {caseItem.thirtyDayNoticeFileName && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       30-Day Notice: {caseItem.thirtyDayNoticeFileName}
                     </p>
                   )}
                   {caseItem.trialDate && (
-                    <p className="text-xs text-gray-400 mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                       Trial Date: {formatDateForDisplay(caseItem.trialDate)}
                     </p>
                   )}
                 </div>
-                <div className="bg-gray-700/50 p-4 flex justify-end space-x-2">
+                <div className="bg-gray-100 dark:bg-gray-700/50 p-4 flex justify-end space-x-2">
                   {caseItem.paymentStatus === PaymentStatus.PAID && (
                     <button
                       onClick={() => handleDownloadFinalNoticePDF(caseItem)}
-                      className="text-xs btn-outline !text-green-400 border-green-500 hover:bg-green-500/10"
+                      className="text-xs btn-outline !text-green-600 dark:!text-green-400 border-green-500 hover:bg-green-500/10"
                     >
                       Download Eviction Date Notice
                     </button>
                   )}
                   <button
                     onClick={() => openCaseDetailsModal(caseItem)}
-                    className="text-xs btn-outline !text-gray-300"
+                    className="text-xs btn-outline !text-gray-600 dark:!text-gray-300"
                   >
                     View/Edit Details (Admin)
                   </button>
@@ -463,8 +466,8 @@ const AdminClientCasesPage: React.FC = () => {
           }`}
           size="3xl"
         >
-          <div className="space-y-4 p-4 text-gray-200">
-            <h3 className="text-lg font-semibold text-gray-100">
+          <div className="space-y-4 p-4 text-gray-700 dark:text-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
               Client: {client?.name}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -587,9 +590,9 @@ const AdminClientCasesPage: React.FC = () => {
             </div>
 
             {selectedCaseForDetails.generatedDocuments.evictionNotice && (
-              <div className="mt-2 p-2 border border-gray-700 rounded-md bg-gray-900/50">
+              <div className="mt-2 p-2 border border-gray-300 dark:border-gray-700 rounded-md bg-gray-100 dark:bg-gray-900/50">
                 <div className="flex justify-between items-center mb-1">
-                  <h4 className="text-sm font-semibold text-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-800 dark:text-gray-200">
                     AI-Generated Eviction Notice (Original)
                   </h4>
                   <button
@@ -605,7 +608,7 @@ const AdminClientCasesPage: React.FC = () => {
                     Copy
                   </button>
                 </div>
-                <pre className="whitespace-pre-wrap text-xs max-h-40 overflow-y-auto text-gray-300">
+                <pre className="whitespace-pre-wrap text-xs max-h-40 overflow-y-auto text-gray-600 dark:text-gray-300">
                   {selectedCaseForDetails.generatedDocuments.evictionNotice}
                 </pre>
               </div>
@@ -624,7 +627,7 @@ const AdminClientCasesPage: React.FC = () => {
               <p className="text-sm text-green-400 mt-1">{copySuccess}</p>
             )}
 
-            <div className="flex justify-end space-x-2 pt-4 border-t border-gray-700">
+            <div className="flex justify-end space-x-2 pt-4 border-t border-gray-300 dark:border-gray-700">
               <button
                 onClick={() => setIsDetailsModalOpen(false)}
                 className="btn-secondary"
@@ -652,7 +655,7 @@ const AdminClientCasesPage: React.FC = () => {
           }`}
           size="md"
         >
-          <div className="space-y-4 p-4 text-gray-200">
+          <div className="space-y-4 p-4 text-gray-700 dark:text-gray-200">
             {amendError && (
               <p className="text-sm text-red-300 bg-red-500/20 p-2 rounded-md">
                 {amendError}
@@ -744,12 +747,12 @@ const AdminClientCasesPage: React.FC = () => {
       )}
 
       <style>{`
-        .btn-outline { @apply py-1 px-3 border border-gray-500 text-gray-300 rounded-md hover:bg-gray-700 transition-colors; }
+        .btn-outline { @apply py-1 px-3 border border-gray-300 dark:border-gray-500 text-gray-600 dark:text-gray-300 rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors; }
         .btn-primary { @apply py-2 px-4 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors; }
-        .btn-secondary { @apply py-2 px-4 bg-gray-600 text-gray-100 rounded-md hover:bg-gray-500 transition-colors; }
+        .btn-secondary { @apply py-2 px-4 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-100 rounded-md hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors; }
         .btn-amend { @apply py-2 px-4 bg-yellow-500 text-yellow-900 rounded-md hover:bg-yellow-600 transition-colors; }
         .btn-amend-badge { @apply py-1 px-2 text-xs bg-yellow-500 text-yellow-900 rounded-md hover:bg-yellow-600 transition-colors disabled:opacity-50 disabled:bg-yellow-800 disabled:text-yellow-400; }
-        .input-sm { @apply mt-1 block w-full px-3 py-2 text-sm border border-gray-600 bg-gray-900 text-gray-200 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500; }
+                        .input-sm { @apply mt-1 block w-full px-4 py-2 text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg shadow-sm focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 transition-colors; }
       `}</style>
     </div>
   );
