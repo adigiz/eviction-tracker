@@ -1,7 +1,7 @@
 import { County } from "./types";
 
 export const APP_NAME = "EvictionTracker";
-export const GEMINI_MODEL_TEXT = "gemini-2.5-flash"; // This might move to backend
+
 
 export const ADMIN_USERNAME = "admin"; // For local dev/testing
 export const CONTRACTOR_USERNAME = "contractor1"; // For local dev/testing

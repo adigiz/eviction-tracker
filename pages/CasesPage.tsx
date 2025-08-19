@@ -14,7 +14,7 @@ import * as Storage from "../services/localStorageService";
 import Modal from "../components/Modal";
 import FailureToPayRentForm from "../components/forms/FailureToPayRentForm";
 import LoadingSpinner from "../components/LoadingSpinner";
-import { generateEvictionNoticeContent } from "../services/geminiService"; // Removed warrant/eviction generation
+import { generateEvictionNoticeContent } from "../services/documentGeneratorService";
 
 const statusColors: Record<LegalCaseStatus, string> = {
   [LegalCaseStatus.NOTICE_DRAFT]:
@@ -211,7 +211,7 @@ const CasesPage: React.FC = () => {
       if (property && tenant) {
         try {
           setIsLoadingAction(true);
-          const noticeContent = await generateEvictionNoticeContent(
+          const noticeContent = generateEvictionNoticeContent(
             auth.currentUser.name,
             property,
             tenant,
