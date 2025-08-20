@@ -285,7 +285,7 @@ const Navbar: React.FC = () => {
 
   const handleLogout = () => {
     auth?.logout();
-    navigate("/login");
+    navigate("/");
   };
 
   const isAdmin = auth?.currentUser?.role === "admin";

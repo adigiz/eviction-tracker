@@ -5,13 +5,14 @@ import React, {
   useEffect,
   useMemo,
 } from "react";
-import { HashRouter } from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import { AuthContextType } from "./types";
 import { seedInitialData } from "./services/seedDataService";
 import { useAuth } from "./hooks/useAuth";
 import * as Storage from "./services/localStorageService";
 import { Toaster } from "react-hot-toast";
 import LoadingSpinner from "./components/LoadingSpinner";
+import { getActiveBackend } from "./config/backend";
 
 // Routing
 import { AppRoutes } from "./routes";
@@ -58,9 +59,12 @@ const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
 };
 
 const App: React.FC = () => {
-  // Initialize seed data
   useEffect(() => {
-    seedInitialData(Storage);
+    try {
+      seedInitialData(Storage);
+    } catch (error) {
+      console.error("Seed data initialization failed:", error);
+    }
   }, []);
 
   // Use custom auth hook
@@ -89,9 +93,9 @@ const App: React.FC = () => {
   return (
     <ThemeProvider>
       <AuthContext.Provider value={authContextValue}>
-        <HashRouter>
+        <BrowserRouter>
           <AppRoutes currentUser={currentUser} />
-        </HashRouter>
+        </BrowserRouter>
       </AuthContext.Provider>
       <Toaster
         toastOptions={{

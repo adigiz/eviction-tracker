@@ -9,7 +9,6 @@ export interface LawFirm {
 export interface User { 
   id: string;
   username: string;
-  password?: string;
   name: string; // Landlord's personal name
   businessName?: string;
   address?: string;
@@ -19,6 +18,26 @@ export interface User {
   referralCode?: string;
   priceOverrides?: Record<string, { price: number; unlocked: boolean; }>;
   cartItemCount?: number;
+  // Add missing fields that are used in the codebase
+  city?: string;
+  state?: string;
+  zipCode?: string;
+}
+
+// Internal user type for localStorage (includes password) - for backward compatibility
+export interface InternalUser extends User {
+  password: string;
+}
+
+// Supabase Auth user type (what comes from auth.users)
+export interface SupabaseAuthUser {
+  id: string;
+  email: string;
+  raw_user_meta_data?: {
+    username?: string;
+    name?: string;
+    role?: string;
+  };
 }
 
 export interface RegistrationData {

@@ -1,5 +1,5 @@
 
-import { Property, Tenant, LegalCase, User, LawFirm } from '../types'; // Changed Landlord to User
+import { Property, Tenant, LegalCase, User, LawFirm, InternalUser } from '../types'; // Changed Landlord to User
 import { LS_PROPERTIES_KEY, LS_TENANTS_KEY, LS_CASES_KEY, LS_AUTH_KEY, LS_ALL_USERS_KEY, LS_LAW_FIRMS_KEY } from '../constants';
 
 // Generic getter
@@ -31,14 +31,15 @@ export const persistUser = (user: User): void => {
   setItem<User>(LS_AUTH_KEY, user); // Store current logged-in user
 
   // Add/Update user in the list of all users
-  const allUsers = getItem<User[]>(LS_ALL_USERS_KEY) || [];
+  const allUsers = getItem<InternalUser[]>(LS_ALL_USERS_KEY) || [];
   const userIndex = allUsers.findIndex(u => u.id === user.id);
   if (userIndex > -1) {
-    allUsers[userIndex] = user;
+    allUsers[userIndex] = { ...allUsers[userIndex], ...user };
   } else {
-    allUsers.push(user);
+    // If this is a new user without password, we can't add to allUsers
+    // This should only happen for Supabase users
   }
-  setItem<User[]>(LS_ALL_USERS_KEY, allUsers);
+  setItem<InternalUser[]>(LS_ALL_USERS_KEY, allUsers);
 };
 
 export const clearPersistedUser = (): void => {
@@ -46,24 +47,24 @@ export const clearPersistedUser = (): void => {
   // We don't clear LS_ALL_USERS_KEY on logout, as it's a persistent list of users
 };
 
-export const getAllRegisteredUsers = (): User[] => {
-  return getItem<User[]>(LS_ALL_USERS_KEY) || [];
+export const getAllRegisteredUsers = (): InternalUser[] => {
+  return getItem<InternalUser[]>(LS_ALL_USERS_KEY) || [];
 };
 
-export const getAllLandlordUsers = (): User[] => {
-  const allUsers = getItem<User[]>(LS_ALL_USERS_KEY) || [];
+export const getAllLandlordUsers = (): InternalUser[] => {
+  const allUsers = getItem<InternalUser[]>(LS_ALL_USERS_KEY) || [];
   return allUsers.filter(user => user.role === 'landlord');
 };
 
-export const getAllContractorUsers = (): User[] => {
-  const allUsers = getItem<User[]>(LS_ALL_USERS_KEY) || [];
+export const getAllContractorUsers = (): InternalUser[] => {
+  const allUsers = getItem<InternalUser[]>(LS_ALL_USERS_KEY) || [];
   return allUsers.filter(user => user.role === 'contractor');
 };
 
 export const deleteUser = (userId: string): void => {
-  let allUsers = getItem<User[]>(LS_ALL_USERS_KEY) || [];
+  let allUsers = getItem<InternalUser[]>(LS_ALL_USERS_KEY) || [];
   allUsers = allUsers.filter(u => u.id !== userId);
-  setItem<User[]>(LS_ALL_USERS_KEY, allUsers);
+  setItem<InternalUser[]>(LS_ALL_USERS_KEY, allUsers);
   
   const currentUser = getPersistedUser();
   if (currentUser && currentUser.id === userId) {

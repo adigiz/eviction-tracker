@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   User,
@@ -6,6 +6,7 @@ import {
   Property,
   County,
   RegistrationData,
+  InternalUser,
 } from "../../types";
 import * as Storage from "../../services/localStorageService";
 import { AuthContext } from "../../App";
@@ -261,7 +262,7 @@ const AdminClientListPage: React.FC = () => {
         };
       });
 
-      const newUser: User = {
+      const newUser: InternalUser = {
         id: MOCK_LANDLORD_ID_PREFIX + Storage.generateId(),
         role: "landlord",
         username: newClientData.username,

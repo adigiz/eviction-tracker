@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext, useMemo } from "react";
-import { User, LegalCase } from "../../types";
+import { User, LegalCase, InternalUser } from "../../types";
 import * as Storage from "../../services/localStorageService";
 import { AuthContext } from "../../App";
 import LoadingSpinner from "../../components/LoadingSpinner";
@@ -148,7 +148,7 @@ const AdminContractorListPage: React.FC = () => {
           );
           return;
         }
-        const updatedContractor: User = {
+        const updatedContractor: InternalUser = {
           ...editingContractor,
           name: name.trim(),
           username: username.trim(),
@@ -165,7 +165,7 @@ const AdminContractorListPage: React.FC = () => {
           setFormError("Password is required for new contractors.");
           return;
         }
-        const newContractor: User = {
+        const newContractor: InternalUser = {
           id: `contractor_${Storage.generateId()}`,
           role: "contractor",
           name: name.trim(),

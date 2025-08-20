@@ -1,4 +1,4 @@
-import { User, Property, Tenant, LegalCase, LawFirm, County, PropertyType, LegalCaseStatus, PaymentStatus } from '../types';
+import { User, Property, Tenant, LegalCase, LawFirm, County, PropertyType, LegalCaseStatus, PaymentStatus, InternalUser } from '../types';
 import { DEFAULT_REQUEST_PRICE } from '../constants';
 
 /**
@@ -22,8 +22,8 @@ export const createSeedData = () => {
     referralCode: "SJLAW5",
   };
 
-  // Demo Users
-  const adminUser: User = {
+  // Demo Users (using InternalUser for localStorage compatibility)
+  const adminUser: InternalUser = {
     id: "admin_user_01",
     username: "admin",
     password: "admin123",
@@ -31,7 +31,7 @@ export const createSeedData = () => {
     role: "admin",
   };
 
-  const contractorUser: User = {
+  const contractorUser: InternalUser = {
     id: "contractor_user_01",
     username: "contractor",
     password: "contractor123",
@@ -57,7 +57,7 @@ export const createSeedData = () => {
     };
   });
 
-  const landlordUser: User = {
+  const landlordUser: InternalUser = {
     id: "landlord_user_01",
     username: "landlord",
     password: "landlord123",

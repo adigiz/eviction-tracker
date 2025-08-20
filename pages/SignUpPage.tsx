@@ -5,6 +5,7 @@ import { useZodForm } from "../hooks/useZodForm";
 import { signupSchema, type SignupFormData } from "../lib/validations";
 import { FormInput } from "../components/ui/FormInput";
 import { FormProvider } from "react-hook-form";
+import { errorService } from "../services/errorService";
 
 const SignUpPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +27,16 @@ const SignUpPage: React.FC = () => {
     },
   });
 
+  // Simple check if all required fields are filled
+  const isFormValid =
+    form.watch("username") &&
+    form.watch("password") &&
+    form.watch("confirmPassword") &&
+    form.watch("name") &&
+    form.watch("email") &&
+    form.watch("phone") &&
+    form.watch("address");
+
   // Auto-focus username field on mount
   useEffect(() => {
     const usernameInput = document.getElementById(
@@ -42,10 +53,15 @@ const SignUpPage: React.FC = () => {
 
   const handleSignUp = async (data: any) => {
     try {
+      // Just create the auth user - don't worry about profile creation
       await auth.register(data);
-      navigate("/dashboard");
+      // Redirect to success page
+      navigate("/registration-success");
     } catch (error) {
-      // Error is already handled by the auth service
+      // Only show errors for actual auth failures
+      const message =
+        error instanceof Error ? error.message : "Registration failed";
+      errorService.showError(message);
     }
   };
 
@@ -284,7 +300,7 @@ const SignUpPage: React.FC = () => {
               {/* Primary Sign Up Button */}
               <button
                 type="submit"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || !isFormValid}
                 className="w-full flex justify-center items-center py-2 px-6 border border-transparent rounded-lg shadow-sm text-base font-semibold text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:ring-offset-2 disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 {form.formState.isSubmitting ? (

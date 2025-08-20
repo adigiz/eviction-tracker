@@ -9,6 +9,7 @@ import {
 } from "../services/localStorageService";
 import Modal from "../components/Modal";
 import { OFFICE_EMAIL_ADDRESS } from "../constants";
+import { errorService } from "../services/errorService";
 
 const StatCard: React.FC<{
   title: string;

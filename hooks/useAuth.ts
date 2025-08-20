@@ -3,6 +3,7 @@ import { User, RegistrationData } from '../types';
 import { authService } from '../services/authService';
 import { cartService } from '../services/cartService';
 import { errorService } from '../services/errorService';
+import { getActiveBackend } from '../config/backend';
 
 export const useAuth = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -10,24 +11,82 @@ export const useAuth = () => {
   const [cartItemCount, setCartItemCount] = useState(0);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Initialize auth state
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const user = authService.getCurrentUser();
-        if (user) {
-          setCurrentUser(user);
-          updateCartCount(user.id);
+        const activeBackend = getActiveBackend();
+        
+        if (activeBackend === 'supabase') {
+          setIsLoading(false);
+        } else {
+          const userResult = authService.getCurrentUser();
+          if (userResult instanceof Promise) {
+            const user = await userResult;
+            if (user) {
+              setCurrentUser(user);
+              updateCartCount(user.id);
+            }
+          } else {
+            if (userResult) {
+              setCurrentUser(userResult);
+              updateCartCount(userResult.id);
+            }
+          }
+          setIsLoading(false);
         }
       } catch (error) {
-        console.warn('Failed to initialize auth:', error);
+        console.error('Failed to initialize auth:', error);
         authService.logout();
-      } finally {
         setIsLoading(false);
       }
     };
 
     initializeAuth();
+  }, []);
+
+  useEffect(() => {
+    const activeBackend = getActiveBackend();
+    
+    if (activeBackend === 'supabase') {
+      import('../services/supabase').then(({ supabase }) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            
+            if (event === 'SIGNED_IN' && session?.user) {
+              if (!session.user.email_confirmed_at) {
+                await supabase.auth.signOut();
+                return;
+              }
+              
+              try {
+                // Get profile data for the authenticated user
+                const { data: profileData, error } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('id', session.user.id)
+                  .single();
+
+                if (profileData && !error) {
+                  // Import the mapping function
+                  const { mapSupabaseProfileToUser } = await import('../services/supabase');
+                  const user = mapSupabaseProfileToUser(profileData);
+                  setCurrentUser(user);
+                  updateCartCount(user.id);
+                }
+              } catch (error) {
+                console.error('Error getting profile data:', error);
+              }
+            } else if (event === 'SIGNED_OUT') {
+              setCurrentUser(null);
+              setCartItemCount(0);
+            }
+          }
+        );
+
+        // Cleanup subscription
+        return () => subscription.unsubscribe();
+      });
+    }
   }, []);
 
   const updateCartCount = useCallback((userId: string) => {
@@ -58,12 +117,10 @@ export const useAuth = () => {
     setAuthError(null);
     try {
       const user = await authService.register(data);
-      setCurrentUser(user);
-      setCartItemCount(0);
+      
       setAuthError(null);
-      // Show success toast for registration since user stays on the same page
-      errorService.showSuccess('Account created successfully!');
     } catch (error) {
+      console.error('Registration error:', error);
       const message = error instanceof Error ? error.message : 'Registration failed';
       setAuthError(message);
       errorService.showError(message);
